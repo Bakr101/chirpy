@@ -7,10 +7,14 @@ import (
 )
 
 func main(){
+	//constants
 	const port = "8080"
 	const filepathRoot = "."
+	//Serve Mux (Router)
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.Dir(filepathRoot)))
+	fs := http.FileServer(http.Dir(filepathRoot))
+	mux.Handle("/app/", http.StripPrefix("/app", fs))
+	mux.HandleFunc("/healthz", handlerReadiness)
 	server := &http.Server{
 		Addr: ":" + port,
 		Handler: mux,
@@ -23,4 +27,10 @@ func main(){
 		fmt.Printf("%v\n", err)
 	}
 
+}
+
+func handlerReadiness(resWrite http.ResponseWriter, req *http.Request){
+	resWrite.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	resWrite.WriteHeader(200)
+	resWrite.Write([]byte("OK"))
 }
