@@ -18,6 +18,10 @@ type Chirp struct{
 	User_ID	  uuid.UUID	`json:"user_id"`
 }
 
+type Chirps struct{
+	Chirps []Chirp `json:"chirps"`
+}
+
 func (cfg *apiConfig)handlerCreateChirp(resWrite http.ResponseWriter, req *http.Request){
 	type chirpReq struct {
 		Body string `json:"body"`
@@ -80,3 +84,4 @@ func handleBadwords(str string) string{
 
 	return strings.Join(cleaned, " ")
 }
+
