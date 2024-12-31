@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 func handlerValidateChirp(resWrite http.ResponseWriter, req *http.Request){
@@ -10,7 +11,7 @@ func handlerValidateChirp(resWrite http.ResponseWriter, req *http.Request){
 		Body string `json:"body"`
 	}
 	type returnVals struct{
-		Valid bool `json:"valid"`
+		Body string `json:"cleaned_body"`
 	}
 
 	decoder := json.NewDecoder(req.Body)
@@ -20,14 +21,38 @@ func handlerValidateChirp(resWrite http.ResponseWriter, req *http.Request){
 		respondWithError(resWrite, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
-
+	
 	const maxChirpLength = 140
 	if len(reqParams.Body) > maxChirpLength {
-		respondWithError(resWrite, http.StatusBadRequest,"Error encoding response body: %s", err)
+		respondWithError(resWrite, http.StatusBadRequest,"Chirp is too long", nil)
 		return	
-	}	
+	}
 
 	respondWithJSON(resWrite, http.StatusOK, returnVals{
-		Valid: true,
+		Body: handleBadwords(reqParams.Body),
 	})
+}
+
+func handleBadwords(str string) string{
+	splitted := strings.Split(str, " ")
+	lowered := strings.ToLower(str)
+	splittedToClean := strings.Split(lowered, " ")
+	cleaned := []string{}
+	badWords := map[string]string{
+		"kerfuffle": "kerfuffle",
+		"sharbert": "sharbert",
+		"fornax": "fornax",
+	}
+
+	for idx, word := range splittedToClean{
+		_, exists := badWords[word]
+		if exists {
+			cleaned = append(cleaned, "****")
+		}
+		if !exists {
+			cleaned = append(cleaned, splitted[idx])
+		}
+	}
+
+	return strings.Join(cleaned, " ")
 }
