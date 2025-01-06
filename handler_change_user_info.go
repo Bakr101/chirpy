@@ -54,6 +54,7 @@ func (cfg *apiConfig)handlerChangeUserInfo(resWrite http.ResponseWriter, req *ht
 		CreatedAt: updatedUser.CreatedAt,
 		UpdatedAt: updatedUser.UpdatedAt,
 		Email: updatedUser.Email,
+		IsChirpyRed: updatedUser.IsChirpyRed,
 	}
 	respondWithJSON(resWrite, http.StatusOK, resParams)
 }

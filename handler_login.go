@@ -17,6 +17,7 @@ type UserLogin struct{
 	Email     		string    	`json:"email"`
 	Token     		string		`json:"token"`
 	RefreshToken 	string 		`json:"refresh_token"`
+	IsChirpyRed		bool		`json:"is_chirpy_red"`
 }
 
 //Time to refresh In days
@@ -78,6 +79,7 @@ func (cfg *apiConfig)handlerLogin(resWrite http.ResponseWriter, req *http.Reques
 		Email: user.Email,
 		Token: JWTToken,
 		RefreshToken: refreshTokenDB.Token,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 	
 	respondWithJSON(resWrite, http.StatusOK, userRes)

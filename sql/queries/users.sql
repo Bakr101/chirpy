@@ -25,3 +25,9 @@ UPDATE users
 SET email = $1, hashed_passwords = $2, updated_at = NOW()
 WHERE id = $3
 RETURNING *;
+
+-- name: SetChirpyRed :one
+UPDATE users
+SET is_chirpy_red = true
+WHERE id = $1
+RETURNING *;

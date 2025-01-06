@@ -17,6 +17,7 @@ type apiConfig struct{
 	db  *database.Queries
 	platform string
 	tokenSecret string
+	polkaKey	string
 }
 
 func main(){
@@ -30,6 +31,10 @@ func main(){
 	platform := os.Getenv("PLATFORM")
 	if platform == ""{
 		log.Fatal("PLATFORM must be set")
+	}
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == ""{
+		log.Fatal("POLKA_KEY must be set")
 	}
 	//constants
 	const port = "8080"
@@ -46,6 +51,7 @@ func main(){
 		db: dbQueries,
 		platform: platform,
 		tokenSecret:tokenSecret,
+		polkaKey: polkaKey,
 	}
 	//Serve Mux (Router)
 	mux := http.NewServeMux()
@@ -65,6 +71,7 @@ func main(){
 	//User handlers
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
 	mux.HandleFunc("PUT /api/users", apiCfg.handlerChangeUserInfo)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerPolka)
 	//Auth handlers
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)

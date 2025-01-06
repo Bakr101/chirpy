@@ -7,23 +7,93 @@ import (
 )
 
 func (cfg *apiConfig)handlerGetChirps(resWrite http.ResponseWriter, req *http.Request){
-	chirps, err := cfg.db.GetChirps(req.Context())
-	if err != nil {
-		respondWithError(resWrite, http.StatusInternalServerError, "error getting chirps", err)
-		return
-	}
-	var chirpsSlice []Chirp
-	for _, chirp := range chirps{
-		chirpJson := Chirp{
-			ID: chirp.ID,
-			CreatedAt: chirp.CreatedAt,
-			UpdatedAt: chirp.UpdatedAt,
-			Body: chirp.Body,
-			User_ID: chirp.UserID,
+	sort := req.URL.Query().Get("sort")
+	authorID := req.URL.Query().Get("author_id")
+	
+		
+	if authorID != ""{
+		userUUID, err := uuid.Parse(authorID)
+		if err != nil {
+			respondWithError(resWrite, http.StatusInternalServerError, "error parsing ID", err)
+			return	
 		}
-		chirpsSlice = append(chirpsSlice, chirpJson)
+		if sort == "asc" || sort == ""{
+			userChirps, err := cfg.db.GetChirpsByID(req.Context(), userUUID)
+			if err != nil {
+				respondWithError(resWrite, http.StatusNotFound, "can't find user", err)
+				return
+			}
+			var chirpsSlice []Chirp
+			for _, chirp := range userChirps{
+				chirpJson := Chirp{
+					ID: chirp.ID,
+					CreatedAt: chirp.CreatedAt,
+					UpdatedAt: chirp.UpdatedAt,
+					Body: chirp.Body,
+					User_ID: chirp.UserID,
+				}
+				chirpsSlice = append(chirpsSlice, chirpJson)
+			}
+			respondWithJSON(resWrite, http.StatusOK, chirpsSlice)
+		}else{
+			userChirps, err := cfg.db.GetChirpsByIDDesc(req.Context(), userUUID)
+			if err != nil {
+				respondWithError(resWrite, http.StatusNotFound, "can't find user", err)
+				return
+			}
+			var chirpsSlice []Chirp
+			for _, chirp := range userChirps{
+				chirpJson := Chirp{
+					ID: chirp.ID,
+					CreatedAt: chirp.CreatedAt,
+					UpdatedAt: chirp.UpdatedAt,
+					Body: chirp.Body,
+					User_ID: chirp.UserID,
+				}
+				chirpsSlice = append(chirpsSlice, chirpJson)
+			}
+			respondWithJSON(resWrite, http.StatusOK, chirpsSlice)
+		}
+
+	}else{
+		if sort == "asc" || sort == ""{
+			chirps, err := cfg.db.GetChirps(req.Context())
+			if err != nil {
+				respondWithError(resWrite, http.StatusInternalServerError, "error getting chirps", err)
+				return
+			}
+			var chirpsSlice []Chirp
+			for _, chirp := range chirps{
+				chirpJson := Chirp{
+					ID: chirp.ID,
+					CreatedAt: chirp.CreatedAt,
+					UpdatedAt: chirp.UpdatedAt,
+					Body: chirp.Body,
+					User_ID: chirp.UserID,
+				}
+				chirpsSlice = append(chirpsSlice, chirpJson)
+			}
+			respondWithJSON(resWrite, http.StatusOK, chirpsSlice)
+		}else{
+			chirps, err := cfg.db.GetChirpsDesc(req.Context())
+			if err != nil {
+				respondWithError(resWrite, http.StatusInternalServerError, "error getting chirps", err)
+				return
+			}
+			var chirpsSlice []Chirp
+			for _, chirp := range chirps{
+				chirpJson := Chirp{
+					ID: chirp.ID,
+					CreatedAt: chirp.CreatedAt,
+					UpdatedAt: chirp.UpdatedAt,
+					Body: chirp.Body,
+					User_ID: chirp.UserID,
+				}
+				chirpsSlice = append(chirpsSlice, chirpJson)
+			}
+			respondWithJSON(resWrite, http.StatusOK, chirpsSlice)
+		}
 	}
-	respondWithJSON(resWrite, http.StatusOK, chirpsSlice)
 }
 
 func (cfg *apiConfig)handlerGetChirp(resWrite http.ResponseWriter, req *http.Request){

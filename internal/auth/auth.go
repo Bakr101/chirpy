@@ -97,3 +97,15 @@ func MakeRefreshToken() (string, error){
 	hexString := hex.EncodeToString(randomBytes)
 	return hexString, nil
 }
+
+func GetAPIKey(headers http.Header) (string, error){
+	authorizationValues := headers.Values("Authorization")
+	if len(authorizationValues) == 0 {
+		return "", fmt.Errorf("no values in authorization header")
+	}
+	authValuesSplit := strings.Fields(authorizationValues[0])
+	fmt.Println(authorizationValues)
+	trimmedToken := strings.TrimSpace(authValuesSplit[1]) 
+
+	return trimmedToken, nil
+}
