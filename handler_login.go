@@ -68,6 +68,7 @@ func (cfg *apiConfig)handlerLogin(resWrite http.ResponseWriter, req *http.Reques
 	refreshTokenDB, err := cfg.db.CreateRefreshToken(req.Context(), refreshTokenParams)
 	if err != nil {
 		respondWithError(resWrite, http.StatusInternalServerError, "error inserting into refresh_tokens DB", err)
+		return
 	}
 
 	userRes := UserLogin{

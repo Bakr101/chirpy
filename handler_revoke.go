@@ -15,6 +15,7 @@ func (cfg *apiConfig)handlerRevoke(resWrite http.ResponseWriter, req *http.Reque
 	_, err = cfg.db.RevokeRefreshToken(req.Context(), userToken)
 	if err != nil {
 		respondWithError(resWrite, http.StatusUnauthorized, "No Token Invalid Access", err)
+		return
 	}
 	respondWithJSON(resWrite, http.StatusNoContent, nil)
 }

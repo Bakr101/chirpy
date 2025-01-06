@@ -19,13 +19,13 @@ type UserCreate struct{
 	
 }
 
+type UserReq struct{
+	Email string 
+	Password string 
+}
 func (cfg *apiConfig)handlerCreateUser(resWrite http.ResponseWriter, req *http.Request){
-	type userReq struct{
-		Email string 
-		Password string 
-	}
 	
-	reqParams := userReq{}
+	reqParams := UserReq{}
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(&reqParams)
 	if err != nil {

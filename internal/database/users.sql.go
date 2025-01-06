@@ -7,7 +7,35 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
+
+const changePassEmail = `-- name: ChangePassEmail :one
+UPDATE users
+SET email = $1, hashed_passwords = $2, updated_at = NOW()
+WHERE id = $3
+RETURNING id, created_at, updated_at, email, hashed_passwords
+`
+
+type ChangePassEmailParams struct {
+	Email           string
+	HashedPasswords string
+	ID              uuid.UUID
+}
+
+func (q *Queries) ChangePassEmail(ctx context.Context, arg ChangePassEmailParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, changePassEmail, arg.Email, arg.HashedPasswords, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPasswords,
+	)
+	return i, err
+}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users(id, created_at, updated_at, email, hashed_passwords)
@@ -55,6 +83,24 @@ WHERE email = $1
 
 func (q *Queries) GetUser(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUser, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPasswords,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, created_at, updated_at, email, hashed_passwords FROM users
+WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
