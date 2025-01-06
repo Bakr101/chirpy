@@ -6,22 +6,27 @@ import (
 	"time"
 
 	"github.com/Bakr101/chirpy/internal/auth"
+	"github.com/Bakr101/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
 type UserLogin struct{
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Token     string	`json:"token"`
+	ID        		uuid.UUID 	`json:"id"`
+	CreatedAt 		time.Time 	`json:"created_at"`
+	UpdatedAt 		time.Time 	`json:"updated_at"`
+	Email     		string    	`json:"email"`
+	Token     		string		`json:"token"`
+	RefreshToken 	string 		`json:"refresh_token"`
 }
+
+//Time to refresh In days
+const refreshTokenTime = 60
 
 func (cfg *apiConfig)handlerLogin(resWrite http.ResponseWriter, req *http.Request){
 	type userReq struct{
 		Email string 
 		Password string 
-		ExpiresInSeconds int
+		
 	}
 	reqParams := userReq{}
 	decoder := json.NewDecoder(req.Body)
@@ -30,10 +35,8 @@ func (cfg *apiConfig)handlerLogin(resWrite http.ResponseWriter, req *http.Reques
 		respondWithError(resWrite, http.StatusInternalServerError, "error decoding json", err)
 		return
 	}
-	//JWT Expiring Time
-	if reqParams.ExpiresInSeconds > 3600 || reqParams.ExpiresInSeconds == 0{
-		reqParams.ExpiresInSeconds = 3600
-	}
+
+	
 	//Get User from DB & validate password
 	user, err := cfg.db.GetUser(req.Context(), reqParams.Email)
 	if err != nil {
@@ -46,9 +49,25 @@ func (cfg *apiConfig)handlerLogin(resWrite http.ResponseWriter, req *http.Reques
 		return
 	}
 	//Create a Token
-	JWTToken, err := auth.MakeJWT(user.ID, cfg.tokenSecret, time.Duration(reqParams.ExpiresInSeconds))
+	JWTToken, err := auth.MakeJWT(user.ID, cfg.tokenSecret, time.Duration(1))
 	if err != nil{
 		respondWithError(resWrite, http.StatusInternalServerError,"error creating token", err)
+	}
+
+	//Create Referesh Token & save to DB
+	refreshToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(resWrite, http.StatusInternalServerError, "error creating refresh token", err)
+	}
+	refreshTokenParams := database.CreateRefreshTokenParams{
+		Token: refreshToken,
+		UserID: user.ID,
+		ExpiresAt: time.Now().AddDate(0, 0, refreshTokenTime),
+	}
+
+	refreshTokenDB, err := cfg.db.CreateRefreshToken(req.Context(), refreshTokenParams)
+	if err != nil {
+		respondWithError(resWrite, http.StatusInternalServerError, "error inserting into refresh_tokens DB", err)
 	}
 
 	userRes := UserLogin{
@@ -57,6 +76,7 @@ func (cfg *apiConfig)handlerLogin(resWrite http.ResponseWriter, req *http.Reques
 		UpdatedAt: user.UpdatedAt,
 		Email: user.Email,
 		Token: JWTToken,
+		RefreshToken: refreshTokenDB.Token,
 	}
 	
 	respondWithJSON(resWrite, http.StatusOK, userRes)

@@ -48,7 +48,7 @@ func TestValidateToken(t *testing.T){
 	validUUID := uuid.New()
 	
 	fmt.Printf("valid ID: %v\n",validUUID)
-	stringifiedToken, err := MakeJWT(validUUID, "bakr", 10 * time.Minute)
+	stringifiedToken, err := MakeJWT(validUUID, "bakr", 10)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -61,17 +61,21 @@ func TestValidateToken(t *testing.T){
 
 }
 
-func TestGetBearerToken(t *testing.T){
-	//headersMap := map[string]string{
-	//	"Authorization":"",
-	//} 
-
+func TestGetBearerToken(t *testing.T){ 
 	headers:= http.Header{
-		"Authorization": []string{"Bearer", "TOKEN_STRING"},
+		"Authorization": []string{"Bearer TOKEN_STRING"},
 	}
 	token, err := GetBearerToken(headers)
 	t.Log(token)
 	if err != nil{
 		t.Errorf("%v", err)
 	}
+}
+
+func TestMakreRefreshToken(t *testing.T){
+	token, err := MakeRefreshToken()
+	if err != nil {
+		t.Errorf("error making token: %v", err)
+	}
+	t.Log(token)
 }

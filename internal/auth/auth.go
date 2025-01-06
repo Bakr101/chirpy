@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -36,7 +38,7 @@ func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer: "chirpy",
 			IssuedAt: jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn * time.Second)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn * time.Hour)),
 			Subject: userID.String(),
 		},
 	}
@@ -79,8 +81,19 @@ func GetBearerToken(headers http.Header) (string, error){
 		return "", fmt.Errorf("no values in authorization header")
 	}
 	authValuesSplit := strings.Fields(authorizationValues[0])
-
+	fmt.Println(authorizationValues)
 	trimmedToken := strings.TrimSpace(authValuesSplit[1]) 
 
 	return trimmedToken, nil
+}
+
+
+func MakeRefreshToken() (string, error){
+	randomBytes := make([]byte, 32)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return "", err
+	}
+	hexString := hex.EncodeToString(randomBytes)
+	return hexString, nil
 }
