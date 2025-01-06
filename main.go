@@ -57,14 +57,15 @@ func main(){
 	mux.HandleFunc("GET /admin/healthz", handlerReadiness)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerHits)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
-	//Create & get chirp(s)
+	//Chirps handlers
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerCreateChirp)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerGetChirps)
 	mux.HandleFunc("GET /api/chirps/{id}", apiCfg.handlerGetChirp)
-	//Create & change user info
+	mux.HandleFunc("DELETE /api/chirps/{id}", apiCfg.handlerDeleteChirp)
+	//User handlers
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
 	mux.HandleFunc("PUT /api/users", apiCfg.handlerChangeUserInfo)
-	//Login, Access & Refresh Tokens
+	//Auth handlers
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevoke)
