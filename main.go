@@ -16,12 +16,14 @@ type apiConfig struct{
 	fileserverHits	atomic.Int32
 	db  *database.Queries
 	platform string
+	tokenSecret string
 }
 
 func main(){
 	//load environment file
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
+	tokenSecret := os.Getenv("T_Secret")
 	if dbURL == "" {
 		log.Fatal("DB_URL must be set")
 	}
@@ -43,6 +45,7 @@ func main(){
 		fileserverHits: atomic.Int32{},
 		db: dbQueries,
 		platform: platform,
+		tokenSecret:tokenSecret,
 	}
 	//Serve Mux (Router)
 	mux := http.NewServeMux()
@@ -57,6 +60,7 @@ func main(){
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerGetChirps)
 	mux.HandleFunc("GET /api/chirps/{id}", apiCfg.handlerGetChirp)
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
+	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 
 	//Server config
 	server := &http.Server{

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Bakr101/chirpy/internal/auth"
 	"github.com/Bakr101/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -25,8 +26,9 @@ type Chirps struct{
 func (cfg *apiConfig)handlerCreateChirp(resWrite http.ResponseWriter, req *http.Request){
 	type chirpReq struct {
 		Body string `json:"body"`
-		User_ID uuid.UUID `json:"user_id"`
+		
 	}
+	const maxChirpLength = 140
 	
 	decoder := json.NewDecoder(req.Body)
 	reqParams := chirpReq{}
@@ -35,8 +37,17 @@ func (cfg *apiConfig)handlerCreateChirp(resWrite http.ResponseWriter, req *http.
 		respondWithError(resWrite, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
+	userToken, err := auth.GetBearerToken(req.Header)
+	if err != nil {
+		respondWithError(resWrite, http.StatusUnauthorized, "No Token Invalid Access", err)
+		return
+	}
+	UserUUID, err := auth.ValidateJWT(userToken, cfg.tokenSecret)
+	if err != nil {
+		respondWithError(resWrite, http.StatusUnauthorized, "Expired Token Invalid Access, please login to create a chirp", err)
+		return
+	}
 	
-	const maxChirpLength = 140
 	if len(reqParams.Body) > maxChirpLength {
 		respondWithError(resWrite, http.StatusBadRequest,"Chirp is too long", nil)
 		return	
@@ -44,8 +55,9 @@ func (cfg *apiConfig)handlerCreateChirp(resWrite http.ResponseWriter, req *http.
 
 	chirp, err := cfg.db.CreateChirp(req.Context(), database.CreateChirpParams{
 		Body: reqParams.Body,
-		UserID: reqParams.User_ID,
+		UserID: UserUUID,
 	})
+
 	if err != nil {
 		respondWithError(resWrite, http.StatusInternalServerError, "error creating chirp", err)
 		return
